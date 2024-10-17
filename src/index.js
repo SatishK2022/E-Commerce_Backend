@@ -7,6 +7,7 @@ import bodyParser from "body-parser";
 import createTables from "./config/createTables.js";
 import { testConnection } from "./config/db.js";
 import morgan from "morgan";
+import cloudinary from "cloudinary";
 
 const app = express();
 
@@ -15,6 +16,13 @@ testConnection();
 
 // Create Tables
 createTables();
+
+// Cloudinary Configuration
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+})
 
 // middlewares
 app.use(cors({
@@ -30,10 +38,13 @@ app.use(morgan("dev"))
 // Routes Imports
 import userRoutes from "./routes/user.routes.js"
 import categoryRoutes from "./routes/category.routes.js"
+import productRoutes from "./routes/product.routes.js"
 
 // Routes Decleration
 app.use("/api/v1/user", userRoutes)
 app.use("/api/v1/category", categoryRoutes)
+app.use("/api/v1/product", productRoutes)
+
 // Home Route
 app.get("/", (req, res) => {
     res.status(200).json({
