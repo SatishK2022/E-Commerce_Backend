@@ -5,7 +5,7 @@ import fs from "fs/promises";
 const addProduct = async (req, res) => {
     let db;
     try {
-        const { name, description, price, category } = req.body;
+        const { name, description, price, category, quantity } = req.body;
         const image = req.file?.path;
 
         db = await pool.getConnection();
@@ -26,8 +26,8 @@ const addProduct = async (req, res) => {
 
         // Insert product
         const [result] = await db.query(
-            `INSERT INTO products (name, description, price, image, category) VALUES (?, ?, ?, ?, ?)`,
-            [name, description, price, null, categoryResult[0].id]
+            `INSERT INTO products (name, description, price, image, category, quantity) VALUES (?, ?, ?, ?, ?, ?)`,
+            [name, description, price, null, categoryResult[0].id, quantity]
         );
 
         // Upload image if provided
@@ -36,7 +36,7 @@ const addProduct = async (req, res) => {
                 folder: "products"
             });
 
-            await connection.query(
+            await db.query(
                 `UPDATE products SET image = ? WHERE id = ?`,
                 [imageUrl.secure_url, result.insertId]
             );
@@ -65,7 +65,7 @@ const updateProduct = async (req, res) => {
     let db;
     try {
         const { id } = req.params;
-        const { name, description, price, category } = req.body;
+        const { name, description, price, category, quantity } = req.body;
         const image = req.file?.path;
 
         db = await pool.getConnection();
@@ -94,8 +94,8 @@ const updateProduct = async (req, res) => {
         }
 
         await db.query(
-            `UPDATE products SET name = ?, description = ?, price = ?, category = ? WHERE id = ?`,
-            [name, description, price, categoryResult[0].id, id]
+            `UPDATE products SET name = ?, description = ?, price = ?, category = ?, quantity = ? WHERE id = ?`,
+            [name, description, price, categoryResult[0].id, quantity, id]
         );
 
         if (image) {
