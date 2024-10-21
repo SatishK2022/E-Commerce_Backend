@@ -90,6 +90,15 @@ const login = asyncHandler(async (req, res) => {
             secure: true,
         };
 
+        const cleanedResult = {
+            ...user,
+            password: undefined,
+            otp: undefined,
+            otpExpires: undefined,
+            createdAt: undefined,
+            updatedAt: undefined
+        };
+
         return res
             .status(200)
             .cookie("token", token, cookieOptions)
@@ -97,6 +106,7 @@ const login = asyncHandler(async (req, res) => {
                 success: true,
                 status: 200,
                 message: "Logged in successfully",
+                data: cleanedResult
             })
 
     } catch (error) {
@@ -131,6 +141,102 @@ const logout = asyncHandler(async (req, res) => {
     }
 })
 
+const profile = asyncHandler(async (req, res) => {
+    const { id } = req.user;
+
+    let db;
+    try {
+        db = await pool.getConnection();
+
+        const [result] = await db.query("SELECT * FROM users WHERE id = ?", [id]);
+
+        if (result.length === 0) {
+            return res.status(400).json({
+                success: false,
+                status: 400,
+                message: "User not found",
+            })
+        }
+
+        const cleanedResult = {
+            ...result[0],
+            id: undefined,
+            password: undefined,
+            otp: undefined,
+            otpExpires: undefined,
+            created_at: undefined,
+            updated_at: undefined
+        };
+
+        return res.status(200).json({
+            success: true,
+            status: 200,
+            message: "Profile retrieved successfully",
+            data: cleanedResult
+        })
+    } catch (error) {
+        console.error("Error getting profile:", error);
+        return res.status(500).json({
+            success: false,
+            status: 500,
+            message: "Error getting profile",
+        })
+    } finally {
+        if (db) db.release();
+    }
+})
+
+const updateProfile = asyncHandler(async (req, res) => {
+    const { id } = req.user;
+    const { first_name, last_name, phone_number, date_of_birth } = req.body;
+
+    let db;
+    try {
+        db = await pool.getConnection();
+
+        const [result] = await db.query(
+            "UPDATE users SET first_name = ?, last_name = ?, phone_number = ?, date_of_birth = ? WHERE id = ?",
+            [first_name, last_name, phone_number, date_of_birth, id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(400).json({
+                success: false,
+                status: 400,
+                message: "User not found",
+            })
+        }
+
+        const [user] = await db.query("SELECT * FROM users WHERE id = ?", [id]);
+
+        const cleanedResult = {
+            ...user[0],
+            id: undefined,
+            password: undefined,
+            otp: undefined,
+            otpExpires: undefined,
+            created_at: undefined,
+            updated_at: undefined
+        };
+
+        return res.status(200).json({
+            success: true,
+            status: 200,
+            message: "Profile updated successfully",
+            data: cleanedResult
+        })
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        return res.status(500).json({
+            success: false,
+            status: 500,
+            message: "Error updating profile",
+        })
+    } finally {
+        if (db) db.release();
+    }
+})
+
 const forgotPassword = asyncHandler(async (req, res) => {
     const { email } = req.body;
 
@@ -138,7 +244,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
         const sql = "SELECT * FROM users WHERE email = ?";
         const params = [email];
         const [result] = await db.query(sql, params);
-        
+
         const user = result[0];
 
         if (!user) {
@@ -242,7 +348,7 @@ const resetPassword = asyncHandler(async (req, res) => {
         const sql = "UPDATE users SET password = ? WHERE email = ?";
         const params = [hashedPassword, email];
         const [result] = await db.query(sql, params);
-        
+
         if (result.affectedRows === 0) {
             return res.status(500).json({
                 success: false,
@@ -272,6 +378,8 @@ export {
     register,
     login,
     logout,
+    profile,
+    updateProfile,
     forgotPassword,
     verifyOTP,
     resetPassword

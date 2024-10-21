@@ -1,5 +1,6 @@
 import express from "express";
-import { forgotPassword, login, logout, register, resetPassword, verifyOTP } from "../controller/user.controller.js";
+import { forgotPassword, login, logout, profile, register, resetPassword, updateProfile, verifyOTP } from "../controller/user.controller.js";
+import { isLoggedIn } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
@@ -14,6 +15,14 @@ router
 router
     .route("/logout")
     .get(logout);
+
+router
+    .route("/profile")
+    .get(isLoggedIn, profile)
+
+router
+    .route("/update-profile")
+    .put(isLoggedIn, updateProfile);
 
 router
     .route("/forgot-password")
