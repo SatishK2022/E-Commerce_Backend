@@ -26,7 +26,8 @@ async function createTables() {
         description VARCHAR(255),
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (id)
+        PRIMARY KEY (id),
+        UNIQUE KEY (name)
     )`
 
     const productTable = `

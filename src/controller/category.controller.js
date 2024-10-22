@@ -6,11 +6,23 @@ const createCategory = async (req, res) => {
     const { name, description } = req.body;
 
     try {
-        const sql = "INSERT INTO categories (name, description) VALUES (?, ?)";
-        const params = [name, description];
+        const sql = "SELECT * FROM categories WHERE name = ?";
+        const params = [name];
         const [result] = await db.query(sql, params);
 
-        if (result.affectedRows === 0) {
+        if (result.length > 0) {
+            return res.status(400).json({
+                success: false,
+                status: 400,
+                message: "Category already exists",
+            })
+        }
+
+        const sql1 = "INSERT INTO categories (name, description) VALUES (?, ?)";
+        const params1 = [name, description];
+        const [result1] = await db.query(sql1, params1);
+
+        if (result1.affectedRows === 0) {
             return res.status(500).json({
                 success: false,
                 status: 500,

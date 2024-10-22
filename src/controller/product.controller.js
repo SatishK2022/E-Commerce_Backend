@@ -66,7 +66,7 @@ const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
         const { name, description, price, category, quantity } = req.body;
-        const image = req.file?.path;
+        const image = req.file;
 
         db = await pool.getConnection();
 
@@ -95,11 +95,11 @@ const updateProduct = async (req, res) => {
 
         await db.query(
             `UPDATE products SET name = ?, description = ?, price = ?, category = ?, quantity = ? WHERE id = ?`,
-            [name, description, price, categoryResult[0].id, quantity, id]
+            [name, description, Number(price), categoryResult[0].id, Number(quantity), id]
         );
 
         if (image) {
-            const imageUrl = await cloudinary.uploader.upload(image, {
+            const imageUrl = await cloudinary.uploader.upload(image.path, {
                 folder: "products"
             });
 
@@ -108,7 +108,7 @@ const updateProduct = async (req, res) => {
                 [imageUrl.secure_url, id]
             );
 
-            await fs.unlink(`./public/${req.file.filename}`);
+            await fs.unlink(`./public/${image.filename}`);
         }
 
         return res.json({
@@ -169,12 +169,20 @@ const getProducts = async (req, res) => {
     try {
         db = await pool.getConnection();
 
-        const [result] = await db.query("SELECT * FROM products");
+        const [products] = await db.query("SELECT p.*, c.name as category FROM products p JOIN categories c ON p.category = c.id");
+
+        if (products.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No products found",
+                status: 404
+            });
+        }
 
         return res.json({
             success: true,
             message: "Products fetched successfully",
-            data: result,
+            data: products,
             status: 200
         });
     } catch (error) {
