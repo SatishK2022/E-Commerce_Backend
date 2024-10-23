@@ -45,27 +45,29 @@ async function createTables() {
         FOREIGN KEY (category) REFERENCES categories(id)
     )`
 
-    const cartTable = `
-    CREATE TABLE IF NOT EXISTS cart (
+    const orderTable = `
+    CREATE TABLE IF NOT EXISTS orders (
         id INT NOT NULL AUTO_INCREMENT,
         user_id INT NOT NULL,
         total_price INT NOT NULL,
+        status VARCHAR(255) NOT NULL DEFAULT 'pending',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (id),
         FOREIGN KEY (user_id) REFERENCES users(id)
     )`
 
-    const cartItemTable = `
-    CREATE TABLE IF NOT EXISTS cart_items (
+    const orderItemTable = `
+    CREATE TABLE IF NOT EXISTS order_items (
         id INT NOT NULL AUTO_INCREMENT,
-        cart_id INT NOT NULL,
+        order_id INT NOT NULL,
         product_id INT NOT NULL,
         quantity INT NOT NULL,
+        price INT NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (id),
-        FOREIGN KEY (cart_id) REFERENCES cart(id),
+        FOREIGN KEY (order_id) REFERENCES orders(id),
         FOREIGN KEY (product_id) REFERENCES products(id)
     )`
 
@@ -75,8 +77,8 @@ async function createTables() {
         await connection.query(userTable);
         await connection.query(categoryTable);
         await connection.query(productTable);
-        await connection.query(cartTable);
-        await connection.query(cartItemTable);
+        await connection.query(orderTable);
+        await connection.query(orderItemTable);
 
         console.log("Tables created successfully!");
         connection.release();
